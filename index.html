@@ -63,6 +63,24 @@
     vertical-align: middle;
   }
 
+  #soundBtn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--gold);
+    background: linear-gradient(180deg, #1E323C 0%, #0A1F2C 100%);
+    border: 1.5px solid var(--gold-dim);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 30;
+    transition: box-shadow .15s, filter .15s;
+  }
+  #soundBtn:hover { box-shadow: 0 0 14px rgba(200,170,110,.5); filter: brightness(1.15); }
+
   /* 轉盤區 */
   .wheel-wrap {
     position: relative;
@@ -298,6 +316,7 @@
 </style>
 </head>
 <body>
+  <button id="soundBtn" aria-label="音效開關">🔊</button>
   <h1>要吃什麼？</h1>
 
   <div class="wheel-wrap">
@@ -364,6 +383,62 @@
   var addBtn = document.getElementById('addBtn');
   var resetBtn = document.getElementById('resetBtn');
   var msg = document.getElementById('msg');
+  var soundBtn = document.getElementById('soundBtn');
+
+  // ---- 金屬音效（Web Audio 合成，零外部音檔）----
+  var SKEY = 'whatToEat.sound.v1';
+  var audioCtx = null;
+  var soundOn = loadSound();
+  function loadSound() {
+    try { return localStorage.getItem(SKEY) !== '0'; } catch (e) { return true; }
+  }
+  function ensureAudio() {
+    if (!soundOn) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  // 齒輪棘輪金屬 tick
+  function playTick() {
+    if (!soundOn || !audioCtx) return;
+    var t = audioCtx.currentTime;
+    var bp = audioCtx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 8;
+    var g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+    bp.connect(g); g.connect(audioCtx.destination);
+    [2150, 3400].forEach(function (f, i) {              // 非諧波雙分音＝金屬感
+      var o = audioCtx.createOscillator();
+      o.type = 'square';
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.exponentialRampToValueAtTime(f * 0.7, t + 0.05);
+      var og = audioCtx.createGain(); og.gain.value = i ? 0.4 : 0.8;
+      o.connect(og); og.connect(bp);
+      o.start(t); o.stop(t + 0.07);
+    });
+  }
+  // 落定金屬鐘鳴（非諧波鐘聲）
+  function playChime() {
+    if (!soundOn || !audioCtx) return;
+    var t = audioCtx.currentTime;
+    var master = audioCtx.createGain();
+    master.gain.setValueAtTime(0.0001, t);
+    master.gain.exponentialRampToValueAtTime(0.5, t + 0.012);
+    master.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    master.connect(audioCtx.destination);
+    var base = 523.25;                                  // C5
+    [1, 2.01, 2.76, 3.93, 5.4].forEach(function (r, i) {
+      var o = audioCtx.createOscillator();
+      o.type = i < 2 ? 'triangle' : 'sine';
+      o.frequency.value = base * r;
+      var og = audioCtx.createGain(); og.gain.value = 0.55 / (i + 1);
+      o.connect(og); og.connect(master);
+      o.start(t); o.stop(t + 1.5);
+    });
+  }
 
   // ---- 讀取 / 儲存（§5.2）----
   function loadItems() {
@@ -505,6 +580,7 @@
     if (state.spinning || state.items.length < 2) return;
     state.spinning = true;
     spinBtn.disabled = true;
+    ensureAudio();                                     // 使用者手勢內解鎖音訊
 
     var n = state.items.length;
     var seg = 360 / n;
@@ -515,20 +591,26 @@
     var delta = ((360 - centerOffset) - (current % 360) + 720) % 360;
     var target = current + 5 * 360 + delta + jitter;
 
-    animate(current, target, 4000, function () {
+    animate(current, target, 4000, seg, function () {
       state.rotation = target;
       state.spinning = false;
       spinBtn.disabled = false;
+      playChime();                                     // 落定金屬鐘鳴
       showResult(state.items[winnerIndex], winnerIndex);
       if (pendingResize) { pendingResize = false; drawWheel(); }
     });
   }
-  function animate(from, to, dur, done) {
+  function animate(from, to, dur, tickSeg, done) {
     var t0 = performance.now();
+    var lastBoundary = 0;                              // 已通過的扇形邊界數
     (function frame(now) {
       var t = Math.min((now - t0) / dur, 1);
       var p = 1 - Math.pow(1 - t, 3);
-      canvas.style.transform = 'rotate(' + (from + (to - from) * p) + 'deg)';
+      var angle = from + (to - from) * p;
+      canvas.style.transform = 'rotate(' + angle + 'deg)';
+      // 每過一格扇形邊界播金屬 tick（每幀至多一次 → 減速時自然變稀）
+      var b = Math.floor((angle - from) / tickSeg);
+      if (b > lastBoundary) { lastBoundary = b; playTick(); }
       if (t < 1) requestAnimationFrame(frame); else done();
     })(performance.now());
   }
@@ -616,6 +698,13 @@
   newItemInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); addItem(); }
   });
+  soundBtn.addEventListener('click', function () {
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    soundBtn.setAttribute('aria-label', soundOn ? '音效開啟' : '音效關閉');
+    try { localStorage.setItem(SKEY, soundOn ? '1' : '0'); } catch (e) {}
+    if (soundOn) { ensureAudio(); playTick(); }         // 開啟即回饋一聲
+  });
 
   // ---- resize（§6.5）----
   var resizeTimer, pendingResize = false;
@@ -628,6 +717,7 @@
   });
 
   // ---- init ----
+  soundBtn.textContent = soundOn ? '🔊' : '🔇';
   drawWheel();
   renderList();
 </script>
