@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>要吃什麼？</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #FFF8F0;
+    color: #333;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px 40px;
+    min-height: 100vh;
+  }
+  h1 { margin: 8px 0 2px; font-size: 28px; }
+  .subtitle { margin: 0 0 16px; font-size: 14px; color: #999; }
+
+  /* 轉盤區 */
+  .wheel-wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  #pointer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: -4px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #FF6B35;
+    z-index: 5;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+  }
+  #wheel {
+    display: block;
+    transform-origin: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  }
+
+  /* 按鈕 */
+  #spinBtn {
+    min-width: 200px;
+    height: 52px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    background: #FF6B35;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  #spinBtn:disabled { opacity: .5; cursor: default; }
+
+  /* 編輯區 */
+  #editPanel {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    padding: 4px 14px;
+  }
+  #editPanel summary {
+    cursor: pointer;
+    font-size: 16px;
+    padding: 10px 0;
+    list-style: none;
+    user-select: none;
+  }
+  #editPanel summary::-webkit-details-marker { display: none; }
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-top: 1px solid #f0e6da;
+  }
+  .item-name { font-size: 16px; word-break: break-all; padding-right: 8px; }
+  .del-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
+    color: #E64980;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .del-btn:disabled { color: #ccc; cursor: default; }
+  .add-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0 4px;
+    border-top: 1px solid #f0e6da;
+  }
+  #newItemInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 44px;
+    font-size: 16px;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  #addBtn {
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 16px;
+    font-size: 16px;
+    color: #fff;
+    background: #FF6B35;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #resetBtn {
+    margin: 10px 0 4px;
+    height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #666;
+    background: #f4ede4;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #msg { min-height: 20px; color: #E03131; font-size: 14px; padding: 4px 0; }
+
+  /* 結果 modal */
+  #resultModal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,.45);
+    z-index: 20;
+    padding: 20px;
+  }
+  #resultModal.show { display: flex; }
+  .modal-card {
+    width: min(85vw, 340px);
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  }
+  .modal-small { font-size: 15px; color: #999; margin-bottom: 6px; }
+  #resultName { font-size: 32px; font-weight: bold; margin-bottom: 22px; word-break: break-all; }
+  .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+  #mapsBtn {
+    height: 50px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #fff;
+    background: #FF6B35;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  #againBtn {
+    height: 46px;
+    font-size: 16px;
+    color: #666;
+    background: #f4ede4;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>🍽️ 要吃什麼？</h1>
+  <p class="subtitle">選擇困難救星</p>
+
+  <div class="wheel-wrap">
+    <div id="pointer"></div>
+    <canvas id="wheel"></canvas>
+  </div>
+
+  <button id="spinBtn">🎲 轉！</button>
+
+  <details id="editPanel">
+    <summary id="editSummary">⚙️ 編輯選項</summary>
+    <div id="itemList"></div>
+    <div class="add-row">
+      <input id="newItemInput" type="text" placeholder="新增選項，例如：拉麵" maxlength="20">
+      <button id="addBtn">新增</button>
+    </div>
+    <button id="resetBtn">恢復預設</button>
+    <div id="msg"></div>
+  </details>
+
+  <div id="resultModal">
+    <div class="modal-card">
+      <div class="modal-small">今天吃</div>
+      <div id="resultName"></div>
+      <div class="modal-btns">
+        <button id="mapsBtn">🗺️ 找最近的</button>
+        <button id="againBtn">🔄 再轉一次</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  'use strict';
+  var KEY = 'whatToEat.items.v2';
+  var MAX = 40;
+  var DEFAULTS = [
+    '日式料理', '燒烤', '泰式', '火鍋', '便當',
+    '拉麵', '壽司', '牛排', '義大利麵', '披薩',
+    '韓式烤肉', '韓式炸雞', '越南河粉', '印度咖哩', '港式飲茶',
+    '川菜', '粵菜', '台式熱炒', '滷味', '鹹酥雞',
+    '水餃', '小籠包', '牛肉麵', '大腸麵線', '麻辣燙',
+    '燒臘', '咖哩飯', '漢堡', '三明治', '早午餐',
+    '沙拉', '涮涮鍋', '石鍋拌飯', '天婦羅', '丼飯',
+    '烏龍麵', '鐵板燒', '港式茶餐廳', '越式法國麵包', '墨西哥捲餅'
+  ];
+  var PALETTE = ['#FF6B6B','#F08C00','#40C057','#22B8CF','#4D8AF0','#9775FA',
+                 '#F06595','#12B886','#E8590C','#7048E8','#E64980','#3B5BDB',
+                 '#F59F00','#20C997','#845EF7','#FF8787','#5C7CFA','#66A80F',
+                 '#D6336C','#0CA678'];
+
+  var state = { items: loadItems(), rotation: 0, spinning: false };
+
+  var canvas = document.getElementById('wheel');
+  var ctx = canvas.getContext('2d');
+  var spinBtn = document.getElementById('spinBtn');
+  var resultModal = document.getElementById('resultModal');
+  var resultName = document.getElementById('resultName');
+  var mapsBtn = document.getElementById('mapsBtn');
+  var againBtn = document.getElementById('againBtn');
+  var itemList = document.getElementById('itemList');
+  var editSummary = document.getElementById('editSummary');
+  var newItemInput = document.getElementById('newItemInput');
+  var addBtn = document.getElementById('addBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var msg = document.getElementById('msg');
+
+  // ---- 讀取 / 儲存（§5.2）----
+  function loadItems() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(KEY));
+      if (Array.isArray(arr)) {
+        var clean = arr
+          .filter(function (x) { return typeof x === 'string' && x.trim().length > 0; })
+          .map(function (x) { return x.trim(); })
+          .slice(0, MAX);
+        if (clean.length >= 2) return clean;
+      }
+    } catch (e) { /* 壞資料 → 落到預設 */ }
+    return DEFAULTS.slice();
+  }
+  function saveItems() {
+    try { localStorage.setItem(KEY, JSON.stringify(state.items)); } catch (e) {}
+  }
+
+  // ---- 尺寸（§4.1.2 唯一公式）----
+  function calcSize() { return Math.min(Math.round(window.innerWidth * 0.9), 400); }
+
+  // ---- 轉盤繪製（§5.3）----
+  function truncate(name) {
+    var cp = Array.from(name);
+    return cp.length > 8 ? cp.slice(0, 7).join('') + '…' : name;
+  }
+  function drawWheel() {
+    var size = calcSize();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var n = state.items.length;
+    var seg = 360 / n;
+    var cx = size / 2, cy = size / 2, r = size / 2;
+    var fs = n <= 6 ? 16 : (n <= 8 ? 15 : (n <= 12 ? 13 : (n <= 20 ? 12 : 11)));
+
+    ctx.clearRect(0, 0, size, size);
+    for (var i = 0; i < n; i++) {
+      var start = (-90 + i * seg) * Math.PI / 180;
+      var end = (-90 + (i + 1) * seg) * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, end);
+      ctx.closePath();
+      ctx.fillStyle = PALETTE[i % PALETTE.length];
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((-90 + i * seg + seg / 2) * Math.PI / 180);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + fs + 'px system-ui, sans-serif';
+      ctx.fillText(truncate(state.items[i]), r * 0.88, 0);
+      ctx.restore();
+    }
+    // 中心白蓋
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.08, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+
+  // ---- 轉動與中獎（§5.4 照抄）----
+  function spin() {
+    if (state.spinning || state.items.length < 2) return;
+    state.spinning = true;
+    spinBtn.disabled = true;
+
+    var n = state.items.length;
+    var seg = 360 / n;
+    var winnerIndex = Math.floor(Math.random() * n);
+    var centerOffset = winnerIndex * seg + seg / 2;
+    var jitter = (Math.random() - 0.5) * seg * 0.7;
+    var current = state.rotation;
+    var delta = ((360 - centerOffset) - (current % 360) + 720) % 360;
+    var target = current + 5 * 360 + delta + jitter;
+
+    animate(current, target, 4000, function () {
+      state.rotation = target;
+      state.spinning = false;
+      spinBtn.disabled = false;
+      showResult(state.items[winnerIndex], winnerIndex);
+      if (pendingResize) { pendingResize = false; drawWheel(); }
+    });
+  }
+  function animate(from, to, dur, done) {
+    var t0 = performance.now();
+    (function frame(now) {
+      var t = Math.min((now - t0) / dur, 1);
+      var p = 1 - Math.pow(1 - t, 3);
+      canvas.style.transform = 'rotate(' + (from + (to - from) * p) + 'deg)';
+      if (t < 1) requestAnimationFrame(frame); else done();
+    })(performance.now());
+  }
+
+  // ---- 結果 modal（§5.5）----
+  function showResult(item, winnerIndex) {
+    resultName.textContent = item;
+    resultName.dataset.idx = winnerIndex;
+    mapsBtn.textContent = '🗺️ 找最近的' + item;
+    resultModal.classList.add('show');
+  }
+  function closeModal() { resultModal.classList.remove('show'); }
+
+  mapsBtn.addEventListener('click', function () {
+    var item = resultName.textContent;
+    window.open(
+      'https://www.google.com/maps/search/?api=1&query=' +
+        encodeURIComponent('附近的' + item),
+      '_blank', 'noopener');
+  });
+  againBtn.addEventListener('click', function () { closeModal(); spin(); });
+  resultModal.addEventListener('click', function (e) {
+    if (e.target === resultModal) closeModal();
+  });
+
+  // ---- 選項管理（§5.6）----
+  var msgTimer;
+  function showMsg(t) {
+    msg.textContent = t;
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(function () { msg.textContent = ''; }, 3000);
+  }
+  function commit() {
+    saveItems();
+    drawWheel();
+    renderList();
+  }
+  function renderList() {
+    itemList.textContent = '';
+    var canDelete = state.items.length > 2;
+    state.items.forEach(function (name, i) {
+      var row = document.createElement('div');
+      row.className = 'item-row';
+      var label = document.createElement('span');
+      label.className = 'item-name';
+      label.textContent = name;
+      var del = document.createElement('button');
+      del.className = 'del-btn';
+      del.textContent = '✕';
+      del.setAttribute('aria-label', '刪除 ' + name);
+      del.disabled = !canDelete;
+      del.addEventListener('click', function () { removeItem(i); });
+      row.appendChild(label);
+      row.appendChild(del);
+      itemList.appendChild(row);
+    });
+    editSummary.textContent = '⚙️ 編輯選項（' + state.items.length + ' 個）';
+  }
+  function addItem() {
+    if (state.spinning) return;
+    var raw = newItemInput.value.trim();
+    if (!raw) { showMsg('請輸入名稱'); return; }
+    if (state.items.indexOf(raw) !== -1) { showMsg('「' + raw + '」已存在'); return; }
+    if (Array.from(raw).length > 12) { showMsg('名稱最長 12 字'); return; }
+    if (state.items.length >= MAX) { showMsg('最多 ' + MAX + ' 個選項'); return; }
+    state.items.push(raw);
+    newItemInput.value = '';
+    commit();
+  }
+  function removeItem(i) {
+    if (state.spinning) return;
+    if (state.items.length <= 2) return;
+    state.items.splice(i, 1);
+    commit();
+  }
+  function resetItems() {
+    if (state.spinning) return;
+    state.items = DEFAULTS.slice();
+    commit();
+  }
+
+  spinBtn.addEventListener('click', spin);
+  addBtn.addEventListener('click', addItem);
+  resetBtn.addEventListener('click', resetItems);
+  newItemInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addItem(); }
+  });
+
+  // ---- resize（§6.5）----
+  var resizeTimer, pendingResize = false;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (state.spinning) { pendingResize = true; return; }
+      drawWheel();
+    }, 200);
+  });
+
+  // ---- init ----
+  drawWheel();
+  renderList();
+</script>
+</body>
+</html>
