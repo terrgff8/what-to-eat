@@ -6,20 +6,62 @@
 <link rel="icon" href="data:,">
 <title>要吃什麼？</title>
 <style>
+  /* ===== Hextech / LoL 風格 ===== */
+  :root {
+    --gold:      #C8AA6E;
+    --gold-lt:   #F0E6D2;
+    --gold-dim:  #785A28;
+    --gold-deep: #463714;
+    --teal:      #0AC8B9;
+    --teal-dp:   #0397AB;
+    --bg0:       #010A13;
+    --bg1:       #0A1428;
+    --panel:     #0A1F2C;
+    --text:      #F0E6D2;
+    --text-dim:  #A09B8C;
+    --red:       #E84057;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    background: #FFF8F0;
-    color: #333;
-    font-family: system-ui, sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #0A1E33 0%, var(--bg1) 42%, var(--bg0) 100%) fixed;
+    color: var(--text);
+    font-family: system-ui, "Segoe UI", sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 12px 40px;
+    padding: 20px 12px 44px;
     min-height: 100vh;
   }
-  h1 { margin: 8px 0 2px; font-size: 28px; }
-  .subtitle { margin: 0 0 16px; font-size: 14px; color: #999; }
+  h1 {
+    margin: 6px 0 2px;
+    font-family: Georgia, "Times New Roman", "Noto Serif TC", serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(180deg, #F0E6D2 0%, #C8AA6E 50%, #785A28 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--gold);
+    filter: drop-shadow(0 0 10px rgba(200,170,110,.35));
+  }
+  .subtitle {
+    margin: 0 0 18px;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: none;
+  }
+  /* 金色分隔線裝飾 */
+  .subtitle::before, .subtitle::after {
+    content: "◆";
+    color: var(--gold-dim);
+    margin: 0 8px;
+    font-size: 10px;
+    vertical-align: middle;
+  }
 
   /* 轉盤區 */
   .wheel-wrap {
@@ -27,41 +69,83 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    padding-top: 6px;
   }
   #pointer {
     position: absolute;
-    top: 0;
+    top: -2px;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: -4px;
     width: 0;
     height: 0;
-    border-left: 12px solid transparent;
-    border-right: 12px solid transparent;
-    border-top: 18px solid #FF6B35;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 22px solid var(--gold);
     z-index: 5;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+    filter: drop-shadow(0 0 6px rgba(200,170,110,.9)) drop-shadow(0 2px 2px rgba(0,0,0,.6));
+  }
+  /* 指針頂端寶石 */
+  #pointer::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle at 35% 35%, var(--teal) 0%, var(--teal-dp) 60%, #024 100%);
+    border: 1.5px solid var(--gold);
+    box-shadow: 0 0 8px rgba(10,200,185,.8);
   }
   #wheel {
     display: block;
     transform-origin: center;
     border-radius: 50%;
-    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    box-shadow:
+      0 0 0 2px rgba(200,170,110,.35),
+      0 0 34px rgba(10,200,185,.28),
+      0 0 22px rgba(200,170,110,.22) inset,
+      0 8px 44px rgba(0,0,0,.7);
   }
 
-  /* 按鈕 */
-  #spinBtn {
-    min-width: 200px;
-    height: 52px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #fff;
-    background: #FF6B35;
-    border: none;
-    border-radius: 12px;
+  /* 通用 hextech 按鈕 */
+  .hex-btn {
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: 1px;
+    color: var(--gold-lt);
+    background: linear-gradient(180deg, #1E323C 0%, #0A1F2C 100%);
+    border: 2px solid transparent;
+    border-image: linear-gradient(180deg, #C8AA6E, #785A28) 1;
     cursor: pointer;
-    margin-bottom: 20px;
+    transition: box-shadow .15s, filter .15s;
+  }
+  .hex-btn:hover:not(:disabled) {
+    box-shadow: 0 0 16px rgba(200,170,110,.5);
+    filter: brightness(1.15);
+  }
+  .hex-btn:disabled { opacity: .45; cursor: default; }
+
+  #spinBtn {
+    min-width: 220px;
+    height: 56px;
+    font-size: 21px;
+    font-weight: 700;
+    margin-bottom: 22px;
+    color: #F5EFE0;
+    background: linear-gradient(180deg, #C8AA6E 0%, #98793C 100%);
+    border: 2px solid transparent;
+    border-image: linear-gradient(180deg, #F0E6D2, #785A28) 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+    letter-spacing: 2px;
+    font-family: Georgia, "Times New Roman", serif;
+    cursor: pointer;
+    transition: box-shadow .15s, filter .15s;
+  }
+  #spinBtn { color: #17110A; }
+  #spinBtn:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(200,170,110,.65);
+    filter: brightness(1.1);
   }
   #spinBtn:disabled { opacity: .5; cursor: default; }
 
@@ -69,15 +153,18 @@
   #editPanel {
     width: 100%;
     max-width: 400px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    padding: 4px 14px;
+    background: linear-gradient(180deg, rgba(10,31,44,.92), rgba(1,10,19,.92));
+    border: 1px solid var(--gold-dim);
+    box-shadow: 0 0 18px rgba(0,0,0,.5), 0 0 0 1px rgba(200,170,110,.08) inset;
+    padding: 4px 16px;
   }
   #editPanel summary {
     cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
     font-size: 16px;
-    padding: 10px 0;
+    letter-spacing: 1px;
+    color: var(--gold);
+    padding: 12px 0;
     list-style: none;
     user-select: none;
   }
@@ -87,26 +174,27 @@
     align-items: center;
     justify-content: space-between;
     padding: 6px 0;
-    border-top: 1px solid #f0e6da;
+    border-top: 1px solid rgba(120,90,40,.35);
   }
-  .item-name { font-size: 16px; word-break: break-all; padding-right: 8px; }
+  .item-name { font-size: 16px; color: var(--text); word-break: break-all; padding-right: 8px; }
   .del-btn {
     min-width: 44px;
     min-height: 44px;
     font-size: 16px;
-    color: #E64980;
+    color: var(--red);
     background: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
     flex: 0 0 auto;
   }
-  .del-btn:disabled { color: #ccc; cursor: default; }
+  .del-btn:hover:not(:disabled) { color: #FF6B7A; text-shadow: 0 0 8px rgba(232,64,87,.6); }
+  .del-btn:disabled { color: #3A4750; cursor: default; }
   .add-row {
     display: flex;
     gap: 8px;
     padding: 12px 0 4px;
-    border-top: 1px solid #f0e6da;
+    border-top: 1px solid rgba(120,90,40,.35);
   }
   #newItemInput {
     flex: 1 1 auto;
@@ -114,32 +202,35 @@
     height: 44px;
     font-size: 16px;
     padding: 0 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    color: var(--text);
+    background: rgba(1,10,19,.8);
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
   }
+  #newItemInput::placeholder { color: #5C6B73; }
+  #newItemInput:focus { outline: none; border-color: var(--teal-dp); box-shadow: 0 0 8px rgba(10,200,185,.4); }
   #addBtn {
     flex: 0 0 auto;
     height: 44px;
-    padding: 0 16px;
+    padding: 0 18px;
     font-size: 16px;
-    color: #fff;
-    background: #FF6B35;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 3px;
   }
   #resetBtn {
-    margin: 10px 0 4px;
+    margin: 12px 0 4px;
     height: 40px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: #666;
-    background: #f4ede4;
-    border: none;
-    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
     cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
   }
-  #msg { min-height: 20px; color: #E03131; font-size: 14px; padding: 4px 0; }
+  #resetBtn:hover { color: var(--gold); border-color: var(--gold); }
+  #msg { min-height: 20px; color: var(--red); font-size: 14px; padding: 4px 0; text-shadow: 0 0 6px rgba(232,64,87,.4); }
 
   /* 結果 modal */
   #resultModal {
@@ -148,46 +239,67 @@
     display: none;
     justify-content: center;
     align-items: center;
-    background: rgba(0,0,0,.45);
+    background: radial-gradient(circle at 50% 40%, rgba(3,20,30,.75), rgba(0,0,0,.88));
     z-index: 20;
     padding: 20px;
   }
   #resultModal.show { display: flex; }
   .modal-card {
+    position: relative;
     width: min(85vw, 340px);
-    background: #fff;
-    border-radius: 16px;
-    padding: 28px 24px;
+    background: linear-gradient(180deg, #0A2030 0%, #04101A 100%);
+    border: 2px solid transparent;
+    border-image: linear-gradient(180deg, #C8AA6E, #463714) 1;
+    padding: 30px 24px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    box-shadow: 0 0 40px rgba(10,200,185,.25), 0 0 0 1px rgba(200,170,110,.15) inset, 0 12px 48px rgba(0,0,0,.7);
   }
-  .modal-small { font-size: 15px; color: #999; margin-bottom: 6px; }
-  #resultName { font-size: 32px; font-weight: bold; margin-bottom: 22px; word-break: break-all; }
-  .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+  .modal-small {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  #resultName {
+    font-family: Georgia, "Times New Roman", "Noto Serif TC", serif;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+    word-break: break-all;
+    background: linear-gradient(180deg, #F0E6D2 0%, #C8AA6E 55%, #785A28 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--gold);
+    filter: drop-shadow(0 0 12px rgba(200,170,110,.4));
+  }
+  .modal-btns { display: flex; flex-direction: column; gap: 12px; }
   #mapsBtn {
-    height: 50px;
+    height: 52px;
     font-size: 17px;
-    font-weight: bold;
-    color: #fff;
-    background: #FF6B35;
-    border: none;
-    border-radius: 12px;
+    font-weight: 700;
+    color: #17110A;
+    background: linear-gradient(180deg, #C8AA6E 0%, #98793C 100%);
+    border: 2px solid transparent;
+    border-image: linear-gradient(180deg, #F0E6D2, #785A28) 1;
     cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: 1px;
+    transition: box-shadow .15s, filter .15s;
   }
+  #mapsBtn:hover { box-shadow: 0 0 20px rgba(200,170,110,.6); filter: brightness(1.1); }
   #againBtn {
-    height: 46px;
-    font-size: 16px;
-    color: #666;
-    background: #f4ede4;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
+    height: 48px;
+    font-size: 15px;
+    border-radius: 0;
   }
 </style>
 </head>
 <body>
-  <h1>🍽️ 要吃什麼？</h1>
-  <p class="subtitle">選擇困難救星</p>
+  <h1>⚔️ 要吃什麼？</h1>
+  <p class="subtitle">選擇困難的召喚師</p>
 
   <div class="wheel-wrap">
     <div id="pointer"></div>
@@ -201,7 +313,7 @@
     <div id="itemList"></div>
     <div class="add-row">
       <input id="newItemInput" type="text" placeholder="新增選項，例如：拉麵" maxlength="20">
-      <button id="addBtn">新增</button>
+      <button id="addBtn" class="hex-btn">新增</button>
     </div>
     <button id="resetBtn">恢復預設</button>
     <div id="msg"></div>
@@ -213,7 +325,7 @@
       <div id="resultName"></div>
       <div class="modal-btns">
         <button id="mapsBtn">🗺️ 找最近的</button>
-        <button id="againBtn">🔄 再轉一次</button>
+        <button id="againBtn" class="hex-btn">🔄 再抽一次</button>
       </div>
     </div>
   </div>
@@ -232,10 +344,11 @@
     '沙拉', '涮涮鍋', '石鍋拌飯', '天婦羅', '丼飯',
     '烏龍麵', '鐵板燒', '港式茶餐廳', '越式法國麵包', '墨西哥捲餅'
   ];
-  var PALETTE = ['#FF6B6B','#F08C00','#40C057','#22B8CF','#4D8AF0','#9775FA',
-                 '#F06595','#12B886','#E8590C','#7048E8','#E64980','#3B5BDB',
-                 '#F59F00','#20C997','#845EF7','#FF8787','#5C7CFA','#66A80F',
-                 '#D6336C','#0CA678'];
+  // Hextech 寶石色盤：藍綠 / 金銅 / 紫水晶 / 紅寶石 交錯（相鄰含首尾繞回皆異色）
+  var PALETTE = ['#0AC8B9','#C8AA6E','#0397AB','#9D4EDD','#1E9E5A','#C0392B',
+                 '#2471A3','#B8860B','#159895','#7B4FD8','#C8437B','#0A78C8',
+                 '#1F8A70','#CA8A04','#5A4FCF','#0E7490','#A83279','#117A65',
+                 '#3A6EA5','#B7791F'];
 
   var state = { items: loadItems(), rotation: 0, spinning: false };
 
@@ -279,6 +392,15 @@
     var cp = Array.from(name);
     return cp.length > 8 ? cp.slice(0, 7).join('') + '…' : name;
   }
+  // 色階：p<0 變暗、p>0 變亮
+  function shade(hex, p) {
+    var num = parseInt(hex.slice(1), 16);
+    var r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+    var t = p < 0 ? 0 : 255, a = Math.abs(p);
+    return 'rgb(' + (Math.round((t - r) * a) + r) + ',' +
+                    (Math.round((t - g) * a) + g) + ',' +
+                    (Math.round((t - b) * a) + b) + ')';
+  }
   function drawWheel() {
     var size = calcSize();
     var dpr = window.devicePixelRatio || 1;
@@ -292,32 +414,90 @@
     var seg = 360 / n;
     var cx = size / 2, cy = size / 2, r = size / 2;
     var fs = n <= 6 ? 16 : (n <= 8 ? 15 : (n <= 12 ? 13 : (n <= 20 ? 12 : 11)));
+    var rim = r * 0.965;                 // 扇形外緣（留金環空間）
 
     ctx.clearRect(0, 0, size, size);
+
+    // 底盤暗環
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.fillStyle = '#02080E';
+    ctx.fill();
+
     for (var i = 0; i < n; i++) {
       var start = (-90 + i * seg) * Math.PI / 180;
       var end = (-90 + (i + 1) * seg) * Math.PI / 180;
+      var baseColor = PALETTE[i % PALETTE.length];
+
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, start, end);
+      ctx.arc(cx, cy, rim, start, end);
       ctx.closePath();
-      ctx.fillStyle = PALETTE[i % PALETTE.length];
+      // 寶石徑向漸層：中心深、外緣亮
+      var grad = ctx.createRadialGradient(cx, cy, rim * 0.08, cx, cy, rim);
+      grad.addColorStop(0, shade(baseColor, -0.45));
+      grad.addColorStop(0.55, shade(baseColor, -0.12));
+      grad.addColorStop(1, shade(baseColor, 0.12));
+      ctx.fillStyle = grad;
       ctx.fill();
+      // 金色分隔線
+      ctx.strokeStyle = 'rgba(200,170,110,.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
+      // 文字（金白 + 暗影）
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate((-90 + i * seg + seg / 2) * Math.PI / 180);
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,.85)';
+      ctx.shadowBlur = 3;
+      ctx.fillStyle = '#F5EFE0';
       ctx.font = 'bold ' + fs + 'px system-ui, sans-serif';
-      ctx.fillText(truncate(state.items[i]), r * 0.88, 0);
+      ctx.fillText(truncate(state.items[i]), rim * 0.9, 0);
       ctx.restore();
     }
-    // 中心白蓋
+
+    // 外圈雕紋金環
+    ctx.shadowBlur = 0;
+    var ringGrad = ctx.createLinearGradient(0, 0, size, size);
+    ringGrad.addColorStop(0, '#F0E6D2');
+    ringGrad.addColorStop(0.5, '#C8AA6E');
+    ringGrad.addColorStop(1, '#785A28');
     ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.08, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
+    ctx.arc(cx, cy, rim + (r - rim) * 0.5, 0, 2 * Math.PI);
+    ctx.strokeStyle = ringGrad;
+    ctx.lineWidth = (r - rim);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, rim, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(70,55,20,.9)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 中心 hextech 寶石
+    var hubR = r * 0.13;
+    ctx.beginPath();
+    ctx.arc(cx, cy, hubR + 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#785A28';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, hubR + 2.5, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#F0E6D2';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    var gemGrad = ctx.createRadialGradient(cx - hubR * 0.3, cy - hubR * 0.3, hubR * 0.1, cx, cy, hubR);
+    gemGrad.addColorStop(0, '#7FFFF2');
+    gemGrad.addColorStop(0.5, '#0AC8B9');
+    gemGrad.addColorStop(1, '#024C52');
+    ctx.beginPath();
+    ctx.arc(cx, cy, hubR, 0, 2 * Math.PI);
+    ctx.fillStyle = gemGrad;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx - hubR * 0.32, cy - hubR * 0.32, hubR * 0.22, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
     ctx.fill();
   }
 
