@@ -117,9 +117,9 @@
     transform-origin: center;
     border-radius: 50%;
     box-shadow:
-      0 0 0 2px rgba(26,26,27,.6),
-      0 0 0 6px rgba(197,160,89,.25),
-      0 10px 40px rgba(26,26,27,.35);
+      0 0 0 2px rgba(26,26,27,.75),
+      0 3px 2px 2px rgba(0,0,0,.28),
+      0 24px 46px -12px rgba(0,0,0,.62);
   }
 
   /* 通用 Ludens 按鈕（碳黑塊 + 金邊 + 全大寫） */
@@ -471,7 +471,7 @@
     var cp = Array.from(name);
     return cp.length > 8 ? cp.slice(0, 7).join('') + '…' : name;
   }
-  // Ludens 裝甲板：白/碳交錯扇形 + 金色接縫 + 工程螺絲 + 頭盔圓頂 + 氧氣藍 LED
+  // Ludens 實體轉盤：白/碳交錯烤漆板 + 玻璃反光凸面 + 3D 金屬外框 + 立體螺絲 + 凸起頭盔轂 + 氧氣藍 LED
   function drawWheel() {
     var size = calcSize();
     var dpr = window.devicePixelRatio || 1;
@@ -485,50 +485,51 @@
     var seg = 360 / n;
     var cx = size / 2, cy = size / 2, r = size / 2;
     var fs = n <= 6 ? 16 : (n <= 8 ? 15 : (n <= 12 ? 13 : (n <= 20 ? 12 : 11)));
-    var rim = r * 0.955;                 // 裝甲板外緣（留金環空間）
+    var rim = r * 0.90;                  // 烤漆板外緣（留厚金屬框）
+    var TWO = 2 * Math.PI;
 
     ctx.clearRect(0, 0, size, size);
 
-    // 底盤碳黑
+    // 底盤（暗）
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-    ctx.fillStyle = '#0E0E0F';
+    ctx.arc(cx, cy, r, 0, TWO);
+    ctx.fillStyle = '#0B0B0C';
     ctx.fill();
 
+    // ---- 烤漆扇形板 ----
     for (var i = 0; i < n; i++) {
       var start = (-90 + i * seg) * Math.PI / 180;
       var end = (-90 + (i + 1) * seg) * Math.PI / 180;
-      var isWhite = (i % 2 === 0);       // 材質碰撞：鈦金白裝甲 vs 碳纖黑內襯
+      var isWhite = (i % 2 === 0);       // 材質碰撞：鈦金白烤漆 vs 碳纖黑烤漆
 
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, rim, start, end);
       ctx.closePath();
-      // 磨砂金屬徑向漸層：中心亮、外緣沉
-      var grad = ctx.createRadialGradient(cx, cy, rim * 0.12, cx, cy, rim);
+      var grad = ctx.createRadialGradient(cx, cy, rim * 0.10, cx, cy, rim);
       if (isWhite) {
         grad.addColorStop(0, '#FFFFFF');
-        grad.addColorStop(0.68, '#F2F2F2');
-        grad.addColorStop(1, '#D6D6DA');
+        grad.addColorStop(0.62, '#EDEDEF');
+        grad.addColorStop(1, '#C6C6CC');
       } else {
-        grad.addColorStop(0, '#26262A');
-        grad.addColorStop(0.68, '#1A1A1B');
-        grad.addColorStop(1, '#101011');
+        grad.addColorStop(0, '#2C2C30');
+        grad.addColorStop(0.62, '#19191A');
+        grad.addColorStop(1, '#0B0B0C');
       }
       ctx.fillStyle = grad;
       ctx.fill();
       // 工業金接縫
-      ctx.strokeStyle = 'rgba(197,160,89,.85)';
+      ctx.strokeStyle = 'rgba(197,160,89,.65)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // 文字（依板材反色，功能主義）
+      // 文字（依板材反色）
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate((-90 + i * seg + seg / 2) * Math.PI / 180);
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.shadowColor = isWhite ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.6)';
+      ctx.shadowColor = isWhite ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.7)';
       ctx.shadowBlur = 2;
       ctx.fillStyle = isWhite ? '#1A1A1B' : '#F2F2F2';
       ctx.font = '700 ' + fs + 'px "Futura","Century Gothic",system-ui,sans-serif';
@@ -537,94 +538,134 @@
     }
     ctx.shadowBlur = 0;
 
-    // 工業金外框環（面罩邊框）
-    var bandInner = rim;
-    var bandOuter = r * 0.995;
-    var bandMid = (bandInner + bandOuter) / 2;
-    var ringGrad = ctx.createLinearGradient(0, 0, size, size);
-    ringGrad.addColorStop(0, '#E8D39A');
-    ringGrad.addColorStop(0.5, '#C5A059');
-    ringGrad.addColorStop(1, '#8A6E38');
+    // ---- 立體形塑：把平面盤變成上打光的凸面玻璃盤（clip 在烤漆板內） ----
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, bandMid, 0, 2 * Math.PI);
-    ctx.strokeStyle = ringGrad;
-    ctx.lineWidth = (bandOuter - bandInner);
-    ctx.stroke();
-    // 環兩側碳黑細邊
-    ctx.beginPath();
-    ctx.arc(cx, cy, bandInner, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(26,26,27,.9)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx, cy, bandOuter, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(26,26,27,.5)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.arc(cx, cy, rim, 0, TWO);
+    ctx.clip();
+    // 邊緣暗角（形狀陰影）
+    var vg = ctx.createRadialGradient(cx, cy, rim * 0.30, cx, cy, rim);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(0.72, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.34)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
+    // 底部落影（增強凸面）
+    var bg = ctx.createLinearGradient(0, cy + rim * 0.1, 0, cy + rim);
+    bg.addColorStop(0, 'rgba(0,0,0,0)');
+    bg.addColorStop(1, 'rgba(0,0,0,0.28)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
+    // 左上玻璃高光熱點（濕亮反光）
+    var hg = ctx.createRadialGradient(cx - rim * 0.34, cy - rim * 0.42, rim * 0.02,
+                                      cx - rim * 0.30, cy - rim * 0.34, rim * 0.85);
+    hg.addColorStop(0, 'rgba(255,255,255,0.40)');
+    hg.addColorStop(0.35, 'rgba(255,255,255,0.10)');
+    hg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hg;
+    ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
+    // 頂部細反光弧
+    var tg = ctx.createLinearGradient(0, cy - rim, 0, cy - rim * 0.5);
+    tg.addColorStop(0, 'rgba(255,255,255,0.22)');
+    tg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = tg;
+    ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
+    ctx.restore();
 
-    // 工程螺絲：各接縫落在金環上（選項不多時才畫，避免雜亂）
+    // ---- 3D 金屬外框（上亮下暗＝圓柱受光） ----
+    var bandInner = rim;
+    var bandOuter = r * 0.985;
+    var bandMid = (bandInner + bandOuter) / 2;
+    var bandW = bandOuter - bandInner;
+    var metal = ctx.createLinearGradient(0, cy - bandOuter, 0, cy + bandOuter);
+    metal.addColorStop(0.00, '#F3E6BE');   // 頂受光
+    metal.addColorStop(0.30, '#D8B978');
+    metal.addColorStop(0.50, '#C5A059');
+    metal.addColorStop(0.72, '#8A6E38');
+    metal.addColorStop(1.00, '#5C4A24');   // 底陰影
+    ctx.beginPath();
+    ctx.arc(cx, cy, bandMid, 0, TWO);
+    ctx.strokeStyle = metal;
+    ctx.lineWidth = bandW;
+    ctx.stroke();
+    // 內外斜面 + 內緣高光
+    ctx.beginPath(); ctx.arc(cx, cy, bandInner + 0.5, 0, TWO);
+    ctx.strokeStyle = 'rgba(26,26,27,.85)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, bandInner + bandW * 0.28, 0, TWO);
+    ctx.strokeStyle = 'rgba(255,244,214,.35)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, bandOuter - 0.5, 0, TWO);
+    ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // 環頂鏡面亮點
+    ctx.save();
+    var rg = ctx.createRadialGradient(cx, cy - bandMid, 0, cx, cy - bandMid, bandOuter * 0.5);
+    rg.addColorStop(0, 'rgba(255,255,255,.55)');
+    rg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, bandMid, 0, TWO);
+    ctx.lineWidth = bandW; ctx.strokeStyle = rg; ctx.stroke();
+    ctx.restore();
+
+    // ---- 立體螺絲（落在金環上；選項不多才畫） ----
     if (n <= 24) {
-      var screwR = Math.max(2, r * 0.013);
+      var screwR = Math.max(2.5, r * 0.016);
       for (var s = 0; s < n; s++) {
         var a = (-90 + s * seg) * Math.PI / 180;
         var sx = cx + Math.cos(a) * bandMid;
         var sy = cy + Math.sin(a) * bandMid;
+        // 陰影
+        ctx.beginPath(); ctx.arc(sx + 0.8, sy + 1.2, screwR, 0, TWO);
+        ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fill();
+        // 螺絲頭（金屬球面）
+        var sgm = ctx.createRadialGradient(sx - screwR * 0.4, sy - screwR * 0.5, screwR * 0.1, sx, sy, screwR);
+        sgm.addColorStop(0, '#FFFFFF');
+        sgm.addColorStop(0.5, '#DBD9DC');
+        sgm.addColorStop(1, '#8C8C90');
+        ctx.beginPath(); ctx.arc(sx, sy, screwR, 0, TWO);
+        ctx.fillStyle = sgm; ctx.fill();
+        ctx.strokeStyle = 'rgba(26,26,27,.7)'; ctx.lineWidth = 1; ctx.stroke();
+        // 一字槽（垂直接縫方向）
+        var ca = Math.cos(a + 0.9), sa = Math.sin(a + 0.9);
         ctx.beginPath();
-        ctx.arc(sx, sy, screwR, 0, 2 * Math.PI);
-        ctx.fillStyle = '#F2F2F2';
-        ctx.fill();
-        ctx.strokeStyle = '#1A1A1B';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        // 一字螺絲槽
-        ctx.beginPath();
-        ctx.moveTo(sx - screwR * 0.6, sy);
-        ctx.lineTo(sx + screwR * 0.6, sy);
-        ctx.strokeStyle = '#4A4A4A';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.moveTo(sx - ca * screwR * 0.62, sy - sa * screwR * 0.62);
+        ctx.lineTo(sx + ca * screwR * 0.62, sy + sa * screwR * 0.62);
+        ctx.strokeStyle = 'rgba(40,40,44,.9)'; ctx.lineWidth = 1.4; ctx.stroke();
       }
     }
 
-    // 中心頭盔圓頂 + 氧氣藍 LED（藍光錨點 2%）
-    var hubR = r * 0.13;
-    // 金色斜面
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR + 5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#C5A059';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR + 5, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#1A1A1B';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    // 鈦金白圓頂
-    var domeGrad = ctx.createRadialGradient(cx - hubR * 0.35, cy - hubR * 0.35, hubR * 0.1, cx, cy, hubR);
-    domeGrad.addColorStop(0, '#FFFFFF');
-    domeGrad.addColorStop(0.6, '#E4E4E7');
-    domeGrad.addColorStop(1, '#B4B4B9');
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR, 0, 2 * Math.PI);
-    ctx.fillStyle = domeGrad;
-    ctx.fill();
-    // 碳黑面罩眼窩
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR * 0.52, 0, 2 * Math.PI);
-    ctx.fillStyle = '#1A1A1B';
-    ctx.fill();
-    // 氧氣藍 LED 核心（發光）
+    // ---- 凸起中心頭盔轂 + 氧氣藍 LED ----
+    var hubR = r * 0.135;
+    // 轂落影
+    ctx.beginPath(); ctx.arc(cx, cy + 2.5, hubR + 7, 0, TWO);
+    ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill();
+    // 金屬斜面圈（上亮下暗）
+    var hbz = ctx.createLinearGradient(0, cy - hubR - 6, 0, cy + hubR + 6);
+    hbz.addColorStop(0, '#F3E6BE');
+    hbz.addColorStop(0.5, '#C5A059');
+    hbz.addColorStop(1, '#6E5628');
+    ctx.beginPath(); ctx.arc(cx, cy, hubR + 6, 0, TWO);
+    ctx.fillStyle = hbz; ctx.fill();
+    ctx.strokeStyle = 'rgba(26,26,27,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // 鈦金白圓頂（玻璃）
+    var dome = ctx.createRadialGradient(cx - hubR * 0.4, cy - hubR * 0.45, hubR * 0.1, cx, cy, hubR);
+    dome.addColorStop(0, '#FFFFFF');
+    dome.addColorStop(0.55, '#E2E2E6');
+    dome.addColorStop(1, '#A9A9AF');
+    ctx.beginPath(); ctx.arc(cx, cy, hubR, 0, TWO);
+    ctx.fillStyle = dome; ctx.fill();
+    // 碳黑面罩內圈
+    ctx.beginPath(); ctx.arc(cx, cy, hubR * 0.56, 0, TWO);
+    ctx.fillStyle = '#141416'; ctx.fill();
+    // 氧氣藍 LED（發光）
     ctx.save();
-    ctx.shadowColor = '#00E5FF';
-    ctx.shadowBlur = 14;
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR * 0.3, 0, 2 * Math.PI);
-    ctx.fillStyle = '#00E5FF';
-    ctx.fill();
+    ctx.shadowColor = '#00E5FF'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(cx, cy, hubR * 0.32, 0, TWO);
+    ctx.fillStyle = '#00E5FF'; ctx.fill();
     ctx.restore();
+    ctx.beginPath(); ctx.arc(cx - hubR * 0.06, cy - hubR * 0.06, hubR * 0.15, 0, TWO);
+    ctx.fillStyle = '#EAFFFF'; ctx.fill();
+    // 圓頂頂緣高光
     ctx.beginPath();
-    ctx.arc(cx, cy, hubR * 0.14, 0, 2 * Math.PI);
-    ctx.fillStyle = '#EAFFFF';
-    ctx.fill();
+    ctx.arc(cx, cy, hubR - 1, Math.PI * 1.05, Math.PI * 1.75);
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
   }
 
   // ---- 轉動與中獎（§5.4 照抄）----
