@@ -556,17 +556,17 @@
     bg.addColorStop(1, 'rgba(0,0,0,0.28)');
     ctx.fillStyle = bg;
     ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
-    // 左上玻璃高光熱點（濕亮反光）
+    // 左上柔和受光（磨砂，非鏡面）
     var hg = ctx.createRadialGradient(cx - rim * 0.34, cy - rim * 0.42, rim * 0.02,
                                       cx - rim * 0.30, cy - rim * 0.34, rim * 0.85);
-    hg.addColorStop(0, 'rgba(255,255,255,0.40)');
-    hg.addColorStop(0.35, 'rgba(255,255,255,0.10)');
+    hg.addColorStop(0, 'rgba(255,255,255,0.13)');
+    hg.addColorStop(0.4, 'rgba(255,255,255,0.035)');
     hg.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = hg;
     ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
-    // 頂部細反光弧
+    // 頂部極淡受光
     var tg = ctx.createLinearGradient(0, cy - rim, 0, cy - rim * 0.5);
-    tg.addColorStop(0, 'rgba(255,255,255,0.22)');
+    tg.addColorStop(0, 'rgba(255,255,255,0.07)');
     tg.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = tg;
     ctx.fillRect(cx - rim, cy - rim, rim * 2, rim * 2);
@@ -578,7 +578,7 @@
     var bandMid = (bandInner + bandOuter) / 2;
     var bandW = bandOuter - bandInner;
     var metal = ctx.createLinearGradient(0, cy - bandOuter, 0, cy + bandOuter);
-    metal.addColorStop(0.00, '#F3E6BE');   // 頂受光
+    metal.addColorStop(0.00, '#DECA95');   // 頂受光（磨砂）
     metal.addColorStop(0.30, '#D8B978');
     metal.addColorStop(0.50, '#C5A059');
     metal.addColorStop(0.72, '#8A6E38');
@@ -595,10 +595,10 @@
     ctx.strokeStyle = 'rgba(255,244,214,.35)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, bandOuter - 0.5, 0, TWO);
     ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1.5; ctx.stroke();
-    // 環頂鏡面亮點
+    // 環頂柔和受光（非鏡面）
     ctx.save();
     var rg = ctx.createRadialGradient(cx, cy - bandMid, 0, cx, cy - bandMid, bandOuter * 0.5);
-    rg.addColorStop(0, 'rgba(255,255,255,.55)');
+    rg.addColorStop(0, 'rgba(255,255,255,.16)');
     rg.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.beginPath(); ctx.arc(cx, cy, bandMid, 0, TWO);
     ctx.lineWidth = bandW; ctx.strokeStyle = rg; ctx.stroke();
@@ -662,10 +662,10 @@
     ctx.restore();
     ctx.beginPath(); ctx.arc(cx - hubR * 0.06, cy - hubR * 0.06, hubR * 0.15, 0, TWO);
     ctx.fillStyle = '#EAFFFF'; ctx.fill();
-    // 圓頂頂緣高光
+    // 圓頂頂緣淡受光
     ctx.beginPath();
     ctx.arc(cx, cy, hubR - 1, Math.PI * 1.05, Math.PI * 1.75);
-    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.5; ctx.stroke();
   }
 
   // ---- 轉動與中獎（§5.4 照抄）----
