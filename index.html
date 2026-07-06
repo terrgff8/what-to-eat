@@ -39,31 +39,13 @@
     min-height: 100vh;
   }
   h1 {
-    margin: 4px 0 2px;
+    margin: 4px 0 22px;
     font-family: var(--font);
     font-size: 30px;
     font-weight: 800;
     letter-spacing: 6px;
     color: var(--black);
     text-transform: uppercase;
-  }
-  /* 品牌標語（Ludens slogan）— 瑞士排版 全大寫大間距 */
-  .tagline {
-    margin: 0 0 20px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 7px;
-    color: var(--gold-dp);
-    text-transform: uppercase;
-  }
-  .tagline::before, .tagline::after {
-    content: "";
-    display: inline-block;
-    width: 22px;
-    height: 1px;
-    background: var(--gold);
-    vertical-align: middle;
-    margin: 0 10px;
   }
 
   #soundBtn {
@@ -346,7 +328,6 @@
 <body>
   <button id="soundBtn" aria-label="音效開關">🔊</button>
   <h1>要吃什麼？</h1>
-  <p class="tagline">Sapiens to Ludens</p>
 
   <div class="wheel-wrap">
     <div id="pointer"></div>
